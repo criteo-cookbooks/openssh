@@ -27,24 +27,6 @@ node['openssh']['package_name'].each do |pkg|
   package pkg
 end
 
-service "ssh" do
-  service_name node['openssh']['service_name']
-  supports value_for_platform(
-    "debian" => { "default" => [ :restart, :reload, :status ] },
-    "ubuntu" => {
-      "8.04" => [ :restart, :reload ],
-      "default" => [ :restart, :reload, :status ]
-    },
-    "centos" => { "default" => [ :restart, :reload, :status ] },
-    "redhat" => { "default" => [ :restart, :reload, :status ] },
-    "fedora" => { "default" => [ :restart, :reload, :status ] },
-    "scientific" => { "default" => [ :restart, :reload, :status ] },
-    "arch" => { "default" => [ :restart ] },
-    "default" => { "default" => [:restart, :reload ] }
-  )
-  action [ :enable, :start ]
-end
-
 template "/etc/ssh/ssh_config" do
   source "ssh_config.erb"
   mode '0644'
@@ -69,5 +51,23 @@ template "/etc/ssh/sshd_config" do
   owner 'root'
   group 'root'
   variables(:settings => node['openssh']['server'])
-  notifies :restart, "service[ssh]"
+end
+
+service "ssh" do
+  service_name node['openssh']['service_name']
+  supports value_for_platform(
+    "debian" => { "default" => [ :restart, :reload, :status ] },
+    "ubuntu" => {
+      "8.04" => [ :restart, :reload ],
+      "default" => [ :restart, :reload, :status ]
+    },
+    "centos" => { "default" => [ :restart, :reload, :status ] },
+    "redhat" => { "default" => [ :restart, :reload, :status ] },
+    "fedora" => { "default" => [ :restart, :reload, :status ] },
+    "scientific" => { "default" => [ :restart, :reload, :status ] },
+    "arch" => { "default" => [ :restart ] },
+    "default" => { "default" => [:restart, :reload ] }
+  )
+  action [ :enable, :start ]
+  subscribes :restart, "template[/etc/ssh/sshd_config]"
 end
