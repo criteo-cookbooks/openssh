@@ -65,6 +65,9 @@ template '/etc/ssh/sshd_config' do
   source 'sshd_config.erb'
   mode   node['openssh']['config_mode']
   owner  'root'
+  variables(
+    :conf => node['openssh']['server'].dup,
+  )
   group  node['openssh']['rootgroup']
   notifies :restart, 'service[ssh]'
 end
